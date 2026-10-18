@@ -1,0 +1,7 @@
+/.nyc_output
+/coverage
+/node_modules
+/dist
+/build
+/.idea
+/AGENTS.md
