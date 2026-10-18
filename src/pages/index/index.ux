@@ -29,7 +29,7 @@ const COLS = 19           // 19 * 20px = 380px wide
 const ROWS = 17           // 17 * 26px = 442px tall
 const CELL_W = 20         // must match .cell width
 const CELL_H = 26         // must match .cell height
-const TICK_MS = 120       // animation interval
+const TICK_MS = 240       // animation interval
 const TRAIL_MIN = 6       // shortest visible tail (cells)
 const TRAIL_MAX = 14      // longest visible tail (cells)
 const SPEED_MIN = 0.6     // cells advanced per tick (slow)

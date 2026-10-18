@@ -46,7 +46,7 @@ One screen — true black, four shades of green — covered by a fixed grid of *
 | **Mutation** | On each tick an active column has a 20% chance to re-roll one visible glyph (cmatrix's flickering-character effect) |
 | **Glyphs** | 70% halfwidth katakana / 30% Latin letters, digits and symbols |
 
-Four brightness shades are used: a white-ish green head `(208,255,224)`, then `(0,230,118)`, `(0,200,83)` and a dim tail `(0,122,51)`. The animation ticks every 120 ms.
+Four brightness shades are used: a white-ish green head `(208,255,224)`, then `(0,230,118)`, `(0,200,83)` and a dim tail `(0,122,51)`. The animation ticks every 240 ms.
 
 No permission is requested: the app only uses a JS timer.
 
@@ -253,7 +253,7 @@ Tek ekran — gerçek siyah, dört yeşil tonu — sabit bir ızgarayla kaplanı
 | **Mutasyon** | Her tick'te aktif kolonun görünür bir glifini %20 olasılıkla değiştirir (cmatrix'in karakter değiştirme efekti) |
 | **Glifler** | %70 halfwidth katakana / %30 Latin harfleri, rakamlar ve semboller |
 
-Dört parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)`, ardından `(0,230,118)`, `(0,200,83)` ve soluk kuyruk `(0,122,51)`. Animasyon 120 ms'de bir tick'ler.
+Dört parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)`, ardından `(0,230,118)`, `(0,200,83)` ve soluk kuyruk `(0,122,51)`. Animasyon 240 ms'de bir tick'ler.
 
 Hiçbir izin istenmez: uygulama yalnızca bir JS zamanlayıcısı kullanır.
 

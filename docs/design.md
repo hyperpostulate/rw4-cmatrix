@@ -52,11 +52,11 @@ Yerleşim Vela'nın desteklediği `flex-direction` + `margin`/`padding` ile kuru
 
 ## 3. Animasyon Modeli
 
-Animasyon tek bir `setInterval` ile yürür. Varsayılan tick süresi **120 ms**'dir. Her kolon bağımsız durum taşır: kafa konumu, iz uzunluğu, hız, kesirli biriktirici, bekleme sayacı ve satır başına karakter kodu.
+Animasyon tek bir `setInterval` ile yürür. Varsayılan tick süresi **240 ms**'dir. Her kolon bağımsız durum taşır: kafa konumu, iz uzunluğu, hız, kesirli biriktirici, bekleme sayacı ve satır başına karakter kodu.
 
 | Parametre | Değer | Davranış |
 | :--- | :--- | :--- |
-| **Tick** | 120 ms | Tüm kolonlar aynı tick'te ilerler |
+| **Tick** | 240 ms | Tüm kolonlar aynı tick'te ilerler |
 | **Hız** | 0.6–1.6 hücre/tick | Kesirli biriktirici (`acc`) 1'i aştıkça kafa bir hücre ilerler |
 | **İz (trail)** | 6–14 hücre | Kafanın arkasında görünen dolu hücre sayısı |
 | **Bekleme** | 0–25 tick | Ekranı terk eden kolon yeniden başlamadan önce bu kadar boş bekler |
@@ -135,7 +135,7 @@ Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak 
 | :--- | :--- | :--- |
 | `COLS` | 19 | Kolon sayısı (genişlik = `COLS × 20` px) |
 | `ROWS` | 17 | Satır sayısı (yükseklik = `ROWS × 26` px) |
-| `TICK_MS` | 120 | Tick süresi; artırmak yavaşlatır ve yükü azaltır |
+| `TICK_MS` | 240 | Tick süresi; artırmak yavaşlatır ve yükü azaltır |
 | `TRAIL_MIN` / `TRAIL_MAX` | 6 / 14 | İz uzunluğu aralığı |
 | `SPEED_MIN` / `SPEED_MAX` | 0.6 / 1.6 | Hız aralığı (hücre/tick) |
 | `WAIT_MAX` | 25 | Maksimum bekleme (tick) |
