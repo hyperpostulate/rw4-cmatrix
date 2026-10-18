@@ -8,14 +8,14 @@ perfectly. Every visible character is therefore a pre-rendered PNG.
 
 The app is a Matrix-style "digital rain" screen. Runtime code composes strings
 from a per-character glyph atlas. Each glyph is generated once per brightness
-shade, at exactly its on-screen display size (20x26 px cell):
+shade, at exactly its on-screen display size (26x32 px cell):
 
     src/common/txt/g_<codepoint hex>_<shade>.png
 
 where <codepoint hex> is lowercase (python "%x" % ord(ch)) and <shade> is 0..1
 (0 = head white-ish, 1 = body green). index.ux maps a character + shade to
 '/common/txt/g_' + code.toString(16) + '_' + shade + '.png'. Missing cells use
-'/common/txt/blank.png', a fully transparent 20x26 PNG.
+'/common/txt/blank.png', a fully transparent 26x32 PNG.
 
 Character sets (fonts under scripts/assets/, never shipped):
   - LATIN = "ABC...Z0-9$+-*=<>"  (43 chars)  scripts/assets/ui-subset.ttf
@@ -27,7 +27,7 @@ Character sets (fonts under scripts/assets/, never shipped):
 
 43 latin + 56 kana = 99 characters = 198 glyph files (two shades), plus
 blank.png = 199 PNGs in src/common/txt/. Every glyph, including the kana
-cell, must fit the 18x24 ink box inside its 20x26 cell.
+cell, must fit the 24x30 ink box inside its 26x32 cell.
 
 Glyph placement is bbox based, never baseline-guessed: the rendered ink is
 measured with font.getbbox(), centred horizontally and vertically in the cell,
@@ -62,13 +62,13 @@ os.makedirs(TXT_DIR, exist_ok=True)
 SS = 4  # supersampling factor while drawing; stored assets are 1x
 
 # ---- geometry (assets are generated at their on-screen display size) ----
-CELL_W, CELL_H = 20, 26
-CELL_INK_W, CELL_INK_H = CELL_W - 2, CELL_H - 2  # 18x24 usable ink box
+CELL_W, CELL_H = 26, 32
+CELL_INK_W, CELL_INK_H = CELL_W - 2, CELL_H - 2  # 24x30 usable ink box
 
-LATIN_FONT_SIZE = 19         # requested size; drops to 18 because 'W' at 19
-LATIN_FONT_MIN = 15          # inks 19px wide and overflows the 18px box
-KANA_FONT_SIZE = 26          # halfwidth kana are narrow -> larger size for
-KANA_FONT_MIN = 22           # equal visual mass; shrinks if the ink overflows
+LATIN_FONT_SIZE = 24         # requested size; auto-shrinks per glyph when the
+LATIN_FONT_MIN = 19          # ink would overflow the box (e.g. a wide 'W')
+KANA_FONT_SIZE = 33          # halfwidth kana are narrow -> larger size for
+KANA_FONT_MIN = 28           # equal visual mass; shrinks if the ink overflows
 
 # ---- palette / shades (0 = head, 1 = body) ----
 SHADES = [
@@ -128,7 +128,7 @@ def _save_verified(name, img, size, allow_blank=False):
 
 
 def make_glyph(ch, shade):
-    """One cell: exact-size 20x26 PNG, ink centred by its measured bbox.
+    """One cell: exact-size 26x32 PNG, ink centred by its measured bbox.
 
     The glyph is rendered as a coverage mask, downsampled, then coloured with
     the exact shade RGB. Colourising after the resize (instead of resizing an

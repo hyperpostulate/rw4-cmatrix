@@ -36,12 +36,12 @@ To build your own app on top of the boilerplate, see the upstream guide: **[rw4-
 
 ## What it shows
 
-One screen — true black, two shades of green — covered by a fixed grid of **19 columns × 17 rows = 323 cells** (20×26 px each). Each column is an independent trail of glyphs:
+One screen — true black, two shades of green — covered by a fixed grid of **15 columns × 14 rows = 210 cells** (26×32 px each). Each column is an independent trail of glyphs:
 
 | Property | Behaviour |
 | :-- | :-- |
-| **Speed** | 0.6–1.6 cells per tick, with a fractional accumulator per column |
-| **Trail** | 6–14 cells long, brightest at the head and fading down the tail |
+| **Speed** | 1.0–2.2 cells per tick, with a fractional accumulator per column |
+| **Trail** | 5–11 cells long: bright head on a uniform green body |
 | **Respawn** | A column that leaves the screen idles 0–25 ticks, then starts again |
 | **Mutation** | On each tick an active column has a 20% chance to re-roll one visible glyph (cmatrix's flickering-character effect) |
 | **Glyphs** | 70% halfwidth katakana / 30% Latin letters, digits and symbols |
@@ -133,7 +133,7 @@ rw4-cmatrix/
 │   │   └── txt/               # generated glyph atlas: g_<hex>_<shade>.png (99 chars x 2 shades) + blank.png
 │   └── pages/
 │       └── index/
-│           └── index.ux       # the whole app: fixed 19x17 grid + rain logic + TUNING constants
+│           └── index.ux       # the whole app: fixed 15x14 grid + rain logic + TUNING constants
 ├── scripts/
 │   ├── gen_assets.py          # reproducible Pillow generator for every PNG asset
 │   └── assets/
@@ -153,7 +153,7 @@ rw4-cmatrix/
 | File | Purpose |
 | :-- | :-- |
 | `src/manifest.json` | Vela app manifest: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the app uses no other system API) |
-| `src/pages/index/index.ux` | The whole app: fixed grid template (323 `<image>` cells), rain simulation (speeds, trails, respawn, mutation, shade mapping) and styles, plus the `TUNING` constants |
+| `src/pages/index/index.ux` | The whole app: fixed grid template (210 `<image>` cells), rain simulation (speeds, trails, respawn, mutation, shade mapping) and styles, plus the `TUNING` constants |
 | `scripts/gen_assets.py` | Generates the two-shade glyph atlas (198 files), `blank.png` and the launcher icon (a 96x96 matrix-rain motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank ink for glyphs) |
 | `docs/design.md` | The authoritative UI/UX spec (palette, geometry, animation model, asset spec) |
 
@@ -174,7 +174,7 @@ Verified on a **real Redmi Watch 4**. Full detail — including the complete sys
 ## Limitations
 
 - **Text must be images.** Adding new characters means extending the character pools in `scripts/gen_assets.py` (`LATIN` / the katakana range) and regenerating the atlas. Characters outside the atlas would not have a matching `g_<hex>_<shade>.png`.
-- **Many glyph images slow the app down.** 323 `<image>` elements sit deliberately at the upper edge of the known "hundreds of images are slow" warning. If it feels sluggish on-device, lower `COLS`/`ROWS` or raise `TICK_MS` in the `TUNING` block at the top of `index.ux`, then rebuild.
+- **Many glyph images slow the app down.** 210 `<image>` elements still sit inside the known "hundreds of images are slow" warning zone. If it feels sluggish on-device, lower `COLS`/`ROWS` or raise `TICK_MS` in the `TUNING` block at the top of `index.ux`, then rebuild.
 - **The grid is fixed at runtime.** Each tick only swaps the `src` strings of a constant set of image nodes; no nodes are created or destroyed. Resizing the grid means editing both the `TUNING` constants and the CSS geometry.
 - **`npm audit` reports vulnerabilities in transitive dev dependencies** of `aiot-toolkit`. They are build-time only and do not ship inside the `.rpk`.
 
@@ -243,12 +243,12 @@ Tek bir işi iyi yapan, bilinçli olarak çok küçük bir uygulama: cmatrix'in 
 
 ## Ne gösterir
 
-Tek ekran — gerçek siyah, iki yeşil tonu — sabit bir ızgarayla kaplanır: **19 kolon × 17 satır = 323 hücre** (her biri 20×26 px). Her kolon bağımsız bir glif izidir:
+Tek ekran — gerçek siyah, iki yeşil tonu — sabit bir ızgarayla kaplanır: **15 kolon × 14 satır = 210 hücre** (her biri 26×32 px). Her kolon bağımsız bir glif izidir:
 
 | Özellik | Davranış |
 | :-- | :-- |
-| **Hız** | Tick başına 0.6–1.6 hücre; her kolonda kesirli biriktirici |
-| **İz (trail)** | 6–14 hücre; başta parlak, kuyruğa doğru solar |
+| **Hız** | Tick başına 1.0–2.2 hücre; her kolonda kesirli biriktirici |
+| **İz (trail)** | 5–11 hücre; parlak kafa, düz yeşil gövde |
 | **Yeniden başlama** | Ekrandan çıkan kolon 0–25 tick bekler, sonra yeniden başlar |
 | **Mutasyon** | Her tick'te aktif kolonun görünür bir glifini %20 olasılıkla değiştirir (cmatrix'in karakter değiştirme efekti) |
 | **Glifler** | %70 halfwidth katakana / %30 Latin harfleri, rakamlar ve semboller |
@@ -340,7 +340,7 @@ rw4-cmatrix/
 │   │   └── txt/               # üretilen glif atlası: g_<hex>_<shade>.png (99 karakter x 2 gölge) + blank.png
 │   └── pages/
 │       └── index/
-│           └── index.ux       # uygulamanın tamamı: sabit 19x17 ızgara + yağmur mantığı + TUNING sabitleri
+│           └── index.ux       # uygulamanın tamamı: sabit 15x14 ızgara + yağmur mantığı + TUNING sabitleri
 ├── scripts/
 │   ├── gen_assets.py          # her PNG varlığı için tekrarlanabilir Pillow üreteci
 │   └── assets/
@@ -360,7 +360,7 @@ rw4-cmatrix/
 | Dosya | Amaç |
 | :-- | :-- |
 | `src/manifest.json` | Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (uygulama başka sistem API'si kullanmaz) |
-| `src/pages/index/index.ux` | Uygulamanın tamamı: sabit ızgara şablonu (323 `<image>` hücresi), yağmur benzetimi (hızlar, izler, yeniden başlama, mutasyon, gölge eşlemesi) ve stiller; ayrıca `TUNING` sabitleri |
+| `src/pages/index/index.ux` | Uygulamanın tamamı: sabit ızgara şablonu (210 `<image>` hücresi), yağmur benzetimi (hızlar, izler, yeniden başlama, mutasyon, gölge eşlemesi) ve stiller; ayrıca `TUNING` sabitleri |
 | `scripts/gen_assets.py` | İki gölgeli glif atlasını (198 dosya), `blank.png`'yi ve başlatıcı simgesini (96x96 matrix yağmuru motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (gliflerde ayrıca boş olmadığını) doğrular |
 | `docs/design.md` | Yetkili UI/UX spesifikasyonu (palet, geometri, animasyon modeli, varlık spec'i) |
 
@@ -381,7 +381,7 @@ rw4-cmatrix/
 ## Sınırlamalar
 
 - **Metin görsel olmak zorundadır.** Yeni karakter eklemek, `scripts/gen_assets.py` içindeki karakter havuzlarını (`LATIN` / katakana aralığı) genişletmeyi ve atlası yeniden üretmeyi gerektirir. Atlas dışındaki karakterler için eşleşen `g_<hex>_<shade>.png` bulunmaz.
-- **Çok sayıda glif görseli uygulamayı yavaşlatır.** 323 `<image>`, bilinen "yüzlerce görsel yavaşlatır" uyarısının bilinçli üst sınırında durur. Cihazda ağır hissedilirse `index.ux` tepesindeki `TUNING` bloğunda `COLS`/`ROWS` düşürün veya `TICK_MS` artırın, sonra yeniden derleyin.
+- **Çok sayıda glif görseli uygulamayı yavaşlatır.** 210 `<image>`, bilinen "yüzlerce görsel yavaşlatır" uyarı bölgesinin içinde durur. Cihazda ağır hissedilirse `index.ux` tepesindeki `TUNING` bloğunda `COLS`/`ROWS` düşürün veya `TICK_MS` artırın, sonra yeniden derleyin.
 - **Izgara çalışma zamanında sabittir.** Her tick yalnızca sabit sayıda görsel düğümün `src` dizelerini değiştirir; düğüm oluşturulmaz veya yok edilmez. Izgarayı yeniden boyutlandırmak hem `TUNING` sabitlerini hem de CSS geometrisini düzenlemeyi gerektirir.
 - **`npm audit`**, `aiot-toolkit`'in geçişli geliştirme bağımlılıklarında güvenlik açıkları bildirir. Bunlar yalnızca derleme zamanıyla ilgilidir ve `.rpk` paketine dâhil olmaz.
 

@@ -25,15 +25,15 @@
 //     display/gap), hence the row/column flex wrappers.
 
 // ---- TUNING ---------------------------------------------------------------
-const COLS = 19           // 19 * 20px = 380px wide
-const ROWS = 17           // 17 * 26px = 442px tall
-const CELL_W = 20         // must match .cell width
-const CELL_H = 26         // must match .cell height
+const COLS = 15           // 15 * 26px = 390px wide
+const ROWS = 14           // 14 * 32px = 448px tall
+const CELL_W = 26         // must match .cell width
+const CELL_H = 32         // must match .cell height
 const TICK_MS = 240       // animation interval
-const TRAIL_MIN = 6       // shortest visible tail (cells)
-const TRAIL_MAX = 14      // longest visible tail (cells)
-const SPEED_MIN = 0.6     // cells advanced per tick (slow)
-const SPEED_MAX = 1.6     // cells advanced per tick (fast)
+const TRAIL_MIN = 5       // shortest visible tail (cells)
+const TRAIL_MAX = 11      // longest visible tail (cells)
+const SPEED_MIN = 1.0     // cells advanced per tick (slow)
+const SPEED_MAX = 2.2     // cells advanced per tick (fast)
 const WAIT_MAX = 25       // max ticks a column idles before restarting
 const MUTATE_CHANCE = 0.2 // chance a trail cell glyph changes per tick
 const KANA_WEIGHT = 0.7   // share of glyphs drawn from halfwidth katakana
@@ -235,8 +235,8 @@ export default {
   flex-direction: column;
   align-items: flex-start;
   background-color: #000000;
-  padding-left: 5px;
-  padding-top: 4px;
+  padding-left: 0px;
+  padding-top: 2px;
 }
 
 .row {
@@ -244,7 +244,7 @@ export default {
 }
 
 .cell {
-  width: 20px;
-  height: 26px;
+  width: 26px;
+  height: 32px;
 }
 </style>

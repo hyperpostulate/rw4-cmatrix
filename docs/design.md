@@ -32,18 +32,18 @@ Uygulama tek ekrandır ve ekran sabit bir hücre ızgarasıyla kaplanır. Yağmu
 | Öğe | Değer |
 | :--- | :--- |
 | **Ekran** | 390 × 450 px (designWidth 390) |
-| **Kolon × Satır** | 19 × 17 = **323 hücre** |
-| **Hücre** | 20 × 26 px |
-| **Izgara alanı** | 380 × 442 px |
-| **Sol kenar payı** | 5 px (`.app` padding-left) |
-| **Üst kenar payı** | 4 px (`.app` padding-top) |
+| **Kolon × Satır** | 15 × 14 = **210 hücre** |
+| **Hücre** | 26 × 32 px |
+| **Izgara alanı** | 390 × 448 px |
+| **Sol kenar payı** | 0 px (`.app` padding-left) |
+| **Üst kenar payı** | 2 px (`.app` padding-top) |
 
 Yerleşim Vela'nın desteklediği `flex-direction` + `margin`/`padding` ile kurulur (`display` ve `gap` yoktur): `.app` dikey kolon, her `.row` yatay satır, her `.cell` tek bir `<image>`.
 
 ```css
-.app  { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; background-color: #000000; padding-left: 5px; padding-top: 4px; }
+.app  { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; background-color: #000000; padding-left: 0px; padding-top: 2px; }
 .row  { flex-direction: row; }
-.cell { width: 20px; height: 26px; }
+.cell { width: 26px; height: 32px; }
 ```
 
 ---
@@ -55,8 +55,8 @@ Animasyon tek bir `setInterval` ile yürür. Varsayılan tick süresi **240 ms**
 | Parametre | Değer | Davranış |
 | :--- | :--- | :--- |
 | **Tick** | 240 ms | Tüm kolonlar aynı tick'te ilerler |
-| **Hız** | 0.6–1.6 hücre/tick | Kesirli biriktirici (`acc`) 1'i aştıkça kafa bir hücre ilerler |
-| **İz (trail)** | 6–14 hücre | Kafanın arkasında görünen dolu hücre sayısı |
+| **Hız** | 1.0–2.2 hücre/tick | Kesirli biriktirici (`acc`) 1'i aştıkça kafa bir hücre ilerler |
+| **İz (trail)** | 5–11 hücre | Kafanın arkasında görünen dolu hücre sayısı |
 | **Bekleme** | 0–25 tick | Ekranı terk eden kolon yeniden başlamadan önce bu kadar boş bekler |
 | **Mutasyon** | 0.2 / tick | Aktif kolonda görünür bir glifin rastgele yeniden atanması |
 | **Karakter karışımı** | %70 katakana / %30 Latin | `KANA_WEIGHT = 0.7` |
@@ -69,7 +69,7 @@ Kafa ile hücre arasındaki dikey uzaklık `d` olmak üzere:
 | `d == 0` | 0 | Beyazımsı parlak kafa |
 | `d > 0` (iz boyunca) | 1 | Gövde yeşili |
 
-İz dışındaki, henüz ulaşılmamış veya beklemedeki hücreler `blank.png` (tam şeffaf 20×26) ile çizilir.
+İz dışındaki, henüz ulaşılmamış veya beklemedeki hücreler `blank.png` (tam şeffaf 26×32) ile çizilir.
 
 ### Durum Matrisi
 
@@ -94,7 +94,7 @@ Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestr
 
 ### `txt/g_<hex>_<shade>.png` (Glif Atlası)
 - **Adlandırma:** `g_<küçük hex kod noktası>_<gölge>.png`, örn. `g_ff8a_0.png`, `g_41_3.png`.
-- **Boyut:** 20 × 26 px (üretilen ve ekranda gösterilen aynı boyut); kullanılabilir mürekkep alanı 18 × 24 px.
+- **Boyut:** 26 × 32 px (üretilen ve ekranda gösterilen aynı boyut); kullanılabilir mürekkep alanı 24 × 30 px.
 - Şeffaf zemin; glif tam olarak ilgili gölge renginde, ölçülen mürekkep kutusu hücreye yatay/dikey ortalanarak yerleştirilir.
 - **Dosya sayısı:** 99 karakter × 2 gölge = 198 dosya + `blank.png` = **199 PNG**.
 
@@ -107,13 +107,13 @@ Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestr
 Runtime karakter seçimi: `%70` olasılıkla `U+FF66..U+FF9D` aralığından rastgele bir kod noktası, aksi hâlde `LATIN` havuzundan rastgele bir karakter. Atlas, seçilebilecek her kod noktasını kapsamak zorundadır.
 
 ### `blank.png`
-- 20 × 26 px, tamamen şeffaf. Boş/ulaşılmamış/bekleyen hücreler için tek dosya.
+- 26 × 32 px, tamamen şeffaf. Boş/ulaşılmamış/bekleyen hücreler için tek dosya.
 
 ### Fontlar (yalnızca üretim zamanı — pakete girmez)
 | Font | Kaynak | Boyut | Kullanım |
 | :--- | :--- | :--- | :--- |
-| `scripts/assets/ui-subset.ttf` | mevcut subset | ~18–19 px (19'dan gerekirse 18'e düşer; sığmazsa 15'e kadar küçülür) | 43 Latin karakter |
-| `scripts/assets/katakana-subset.ttf` | Noto Sans Mono CJK JP'den fontTools ile subset — **SIL OFL** | 26 px (gerekirse 22'ye kadar küçülür) | 56 halfwidth katakana |
+| `scripts/assets/ui-subset.ttf` | mevcut subset | ~24 px (sığmayan glifte 19'a kadar küçülür) | 43 Latin karakter |
+| `scripts/assets/katakana-subset.ttf` | Noto Sans Mono CJK JP'den fontTools ile subset — **SIL OFL** | 33 px (gerekirse 28'e kadar küçülür) | 56 halfwidth katakana |
 
 Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak üzere Latin'den daha büyük puntoda üretilir. Her iki font da yalnızca `gen_assets.py` çalışırken kullanılır.
 
@@ -121,7 +121,7 @@ Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak 
 
 ## 5. Performans ve TUNING
 
-323 `<image>` hücresi, cihazın bilinen "yüzlerce görsel ekranı yavaşlatır" sınırının bilinçli olarak üst ucundadır. Bu yüzden:
+210 `<image>` hücresi, cihazın bilinen "yüzlerce görsel ekranı yavaşlatır" sınırının hâlâ içindedir. Bu yüzden:
 
 - **DOM sabittir:** Izgara bir kez kurulur; her tick'te yalnızca `src` dizeleri değiştirilir, düğüm oluşturulmaz veya yok edilmez.
 - **Vela JS güvenliği:** `Array.prototype.fill` kullanılmaz; diziler döngüyle doldurulur.
@@ -129,11 +129,11 @@ Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak 
 
 | Sabit | Varsayılan | Etki |
 | :--- | :--- | :--- |
-| `COLS` | 19 | Kolon sayısı (genişlik = `COLS × 20` px) |
-| `ROWS` | 17 | Satır sayısı (yükseklik = `ROWS × 26` px) |
+| `COLS` | 15 | Kolon sayısı (genişlik = `COLS × 26` px) |
+| `ROWS` | 14 | Satır sayısı (yükseklik = `ROWS × 32` px) |
 | `TICK_MS` | 240 | Tick süresi; artırmak yavaşlatır ve yükü azaltır |
-| `TRAIL_MIN` / `TRAIL_MAX` | 6 / 14 | İz uzunluğu aralığı |
-| `SPEED_MIN` / `SPEED_MAX` | 0.6 / 1.6 | Hız aralığı (hücre/tick) |
+| `TRAIL_MIN` / `TRAIL_MAX` | 5 / 11 | İz uzunluğu aralığı |
+| `SPEED_MIN` / `SPEED_MAX` | 1.0 / 2.2 | Hız aralığı (hücre/tick) |
 | `WAIT_MAX` | 25 | Maksimum bekleme (tick) |
 | `MUTATE_CHANCE` | 0.2 | Tick başına glif mutasyonu olasılığı |
 | `KANA_WEIGHT` | 0.7 | Katakana payı |
