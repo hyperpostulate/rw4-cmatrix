@@ -12,8 +12,8 @@ shade, at exactly its on-screen display size (20x26 px cell):
 
     src/common/txt/g_<codepoint hex>_<shade>.png
 
-where <codepoint hex> is lowercase (python "%x" % ord(ch)) and <shade> is 0..3
-(0 = head white-ish, 3 = dim tail). index.ux maps a character + shade to
+where <codepoint hex> is lowercase (python "%x" % ord(ch)) and <shade> is 0..1
+(0 = head white-ish, 1 = body green). index.ux maps a character + shade to
 '/common/txt/g_' + code.toString(16) + '_' + shade + '.png'. Missing cells use
 '/common/txt/blank.png', a fully transparent 20x26 PNG.
 
@@ -25,9 +25,9 @@ Character sets (fonts under scripts/assets/, never shipped):
     katakana font was subset from Noto Sans Mono CJK JP and is distributed
     here under the SIL Open Font License (OFL).
 
-43 latin + 56 kana = 99 characters = 396 glyph files, plus blank.png = 397
-PNGs in src/common/txt/. Every glyph, including the kana cell, must fit the
-18x24 ink box inside its 20x26 cell.
+43 latin + 56 kana = 99 characters = 198 glyph files (two shades), plus
+blank.png = 199 PNGs in src/common/txt/. Every glyph, including the kana
+cell, must fit the 18x24 ink box inside its 20x26 cell.
 
 Glyph placement is bbox based, never baseline-guessed: the rendered ink is
 measured with font.getbbox(), centred horizontally and vertically in the cell,
@@ -70,12 +70,10 @@ LATIN_FONT_MIN = 15          # inks 19px wide and overflows the 18px box
 KANA_FONT_SIZE = 26          # halfwidth kana are narrow -> larger size for
 KANA_FONT_MIN = 22           # equal visual mass; shrinks if the ink overflows
 
-# ---- palette / shades (0 = head, 3 = dim tail) ----
+# ---- palette / shades (0 = head, 1 = body) ----
 SHADES = [
     (208, 255, 224, 255),    # 0 bright head, white-ish green
-    (0, 230, 118, 255),      # 1
-    (0, 200, 83, 255),       # 2
-    (0, 122, 51, 255),       # 3 dim tail
+    (0, 200, 83, 255),       # 1 body green (#00C853)
 ]
 BLACK = (0, 0, 0, 255)
 
@@ -183,8 +181,8 @@ def make_logo():
     """96x96 launcher icon: matrix "kana rain" on a full-bleed black disc.
 
     The disc is black on the launcher's dark background (effectively invisible)
-    so the icon reads as vertical halfwidth-katakana rain trails, dim tail at
-    the bottom (shade 3) up through shade 2/1 to a bright shade-0 head on top.
+    so the icon reads as vertical halfwidth-katakana rain trails in body
+    green (shade 1), each topped by a bright shade-0 head.
     Drawn with the katakana font. Size is fixed at 96x96 -- see LOGO_SIZE."""
     size = (LOGO_SIZE, LOGO_SIZE)
     n = LOGO_SIZE * SS
@@ -208,12 +206,10 @@ def make_logo():
     for xf, yf, chars in columns:
         x = xf * n
         y = yf * n  # centre of the bottom-most glyph
-        count = len(chars)
         for i, ch in enumerate(chars):
-            # i == 0 is the bottom char; tail shades 3 -> 2 -> 1 up the trail
-            # with the bright shade-0 head as the topmost character.
-            trail = [3, 3, 2, 1] if count >= 5 else [3, 2, 1]
-            shade = 0 if i == count - 1 else trail[i]
+            # i == 0 is the bottom char; uniform body green (shade 1) up the
+            # trail with the bright shade-0 head as the topmost character.
+            shade = 0 if i == len(chars) - 1 else 1
             b = font.getbbox(ch)
             bw, bh = b[2] - b[0], b[3] - b[1]
             cx = x + (0.5 if i % 2 else -0.5) * font_size * SS * 0.15

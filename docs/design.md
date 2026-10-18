@@ -5,21 +5,19 @@ Bu belge, Redmi Watch 4 için geliştirilen **rw4-cmatrix** uygulamasının kesi
 ## 1. Genel Görsel Dil
 
 ### Tema ve Renk Paleti
-AMOLED enerji tasarrufu için arka plan tamamen siyahtır (`#000000`, true black). Görsel hiyerarşi renk çeşitliliğiyle değil, tek bir yeşil ailesinin **dört parlaklık kademesiyle** kurulur: kafadaki beyazımsı yeşilden kuyruktaki koyu yeşile.
+AMOLED enerji tasarrufu için arka plan tamamen siyahtır (`#000000`, true black). Görsel hiyerarşi renk çeşitliliğiyle değil, tek bir yeşil ailesinin **iki parlaklık kademesiyle** kurulur: kafadaki beyazımsı yeşil ve gövdenin canlı yeşili.
 
 | Kullanım Alanı | RGB | Hex | Açıklama |
 | :--- | :--- | :--- | :--- |
 | **Arka Plan** | `(0, 0, 0)` | `#000000` | Saf siyah (True Black) |
 | **Gölge 0 — Kafa** | `(208, 255, 224)` | `#D0FFE0` | Beyazımsı parlak yeşil; kolonun en üst karakteri |
-| **Gölge 1** | `(0, 230, 118)` | `#00E676` | Kafanın hemen altındaki canlı yeşil |
-| **Gölge 2** | `(0, 200, 83)` | `#00C853` | Gövde yeşili |
-| **Gölge 3 — Kuyruk** | `(0, 122, 51)` | `#007A33` | Soluk kuyruk yeşili |
+| **Gölge 1 — Gövde** | `(0, 200, 83)` | `#00C853` | İz boyunca tek düze gövde yeşili |
 
 ### Kritik Cihaz Notu: Metin Görsel Olarak Çizilir
 Redmi Watch 4'ün Vela çalışma zamanı `<text>`/`<span>`/`<input>` bileşenleri için **hiçbir okunabilir glif çizmez** (gerçek cihazda doğrulandı; paketlenen bir `@font-face` fontu da etkisizdir). `<image>` ise sorunsuz çizilir. Bu nedenle:
 
 - Görünür her karakter önceden üretilmiş bir PNG'dir; uygulamada statik etiket/başlık görseli yoktur.
-- Yağmur, **karakter × gölge** glif atlasından dizilir: her karakterin dört gölge için ayrı şeffaf PNG'si vardır (`src/common/txt/g_<kod noktası hex>_<gölge>.png`). Boş hücreler `blank.png` kullanır.
+- Yağmur, **karakter × gölge** glif atlasından dizilir: her karakterin iki gölge için ayrı şeffaf PNG'si vardır (`src/common/txt/g_<kod noktası hex>_<gölge>.png`). Boş hücreler `blank.png` kullanır.
 - Şablonda `for="{{ grid }}"` + `for="{{ $item }}"` + `src="{{ $item }}"` ile hücre başına bir `<image>` çizilir; her tick yalnızca `src` dizeleri değiştirilir.
 - Atlas dışı bir karakterin dosyası bulunmaz; karakter havuzuna eklenmeden çizilemez.
 
@@ -69,9 +67,7 @@ Kafa ile hücre arasındaki dikey uzaklık `d` olmak üzere:
 | Koşul | Gölge | Görünüm |
 | :--- | :--- | :--- |
 | `d == 0` | 0 | Beyazımsı parlak kafa |
-| `d <= 2` | 1 | Canlı yeşil |
-| `d <= 5` | 2 | Gövde yeşili |
-| `d > 5` (iz sonuna kadar) | 3 | Soluk kuyruk |
+| `d > 0` (iz boyunca) | 1 | Gövde yeşili |
 
 İz dışındaki, henüz ulaşılmamış veya beklemedeki hücreler `blank.png` (tam şeffaf 20×26) ile çizilir.
 
@@ -92,7 +88,7 @@ Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestr
 
 ### `logo.png` (App Icon)
 - **Boyut:** **96×96 px** (bilinçli, tesadüf değil). Başlatıcı, ismin solunda ayırdığı alanın genişliğini simge PNG'sinin piksel boyutundan türetir; **192×192** (Vela dokümanlarının önerdiği boyut) ismi satırın ortasına itiyordu, **96×96** normal konumuna getirdi (cihazda doğrulandı).
-- **İçerik:** Tam kanama siyah daire + üzerinde dikey **halfwidth katakana yağmuru izleri**; altta gölge 3 kuyruk, yukarı doğru gölge 2/1 ve en üstte gölge 0 parlak kafa. Simge, uygulamanın kendi görsel dilinin minyatürüdür.
+- **İçerik:** Tam kanama siyah daire + üzerinde dikey **halfwidth katakana yağmuru izleri**; gövde yeşili (gölge 1) izler ve en üstte gölge 0 parlak kafa. Simge, uygulamanın kendi görsel dilinin minyatürüdür.
 - Not: Başlatıcının koyu zemininde siyah daire pratikte görünmez; okunan şey yeşil yağmur izleridir.
 - Simge konumu ve isim hizası başlatıcı tarafından belirlenir; manifestten değiştirilemez.
 
@@ -100,7 +96,7 @@ Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestr
 - **Adlandırma:** `g_<küçük hex kod noktası>_<gölge>.png`, örn. `g_ff8a_0.png`, `g_41_3.png`.
 - **Boyut:** 20 × 26 px (üretilen ve ekranda gösterilen aynı boyut); kullanılabilir mürekkep alanı 18 × 24 px.
 - Şeffaf zemin; glif tam olarak ilgili gölge renginde, ölçülen mürekkep kutusu hücreye yatay/dikey ortalanarak yerleştirilir.
-- **Dosya sayısı:** 99 karakter × 4 gölge = 396 dosya + `blank.png` = **397 PNG**.
+- **Dosya sayısı:** 99 karakter × 2 gölge = 198 dosya + `blank.png` = **199 PNG**.
 
 #### Karakter Seti (99 karakter)
 | Grup | Adet | İçerik |

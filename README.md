@@ -36,7 +36,7 @@ To build your own app on top of the boilerplate, see the upstream guide: **[rw4-
 
 ## What it shows
 
-One screen — true black, four shades of green — covered by a fixed grid of **19 columns × 17 rows = 323 cells** (20×26 px each). Each column is an independent trail of glyphs:
+One screen — true black, two shades of green — covered by a fixed grid of **19 columns × 17 rows = 323 cells** (20×26 px each). Each column is an independent trail of glyphs:
 
 | Property | Behaviour |
 | :-- | :-- |
@@ -46,7 +46,7 @@ One screen — true black, four shades of green — covered by a fixed grid of *
 | **Mutation** | On each tick an active column has a 20% chance to re-roll one visible glyph (cmatrix's flickering-character effect) |
 | **Glyphs** | 70% halfwidth katakana / 30% Latin letters, digits and symbols |
 
-Four brightness shades are used: a white-ish green head `(208,255,224)`, then `(0,230,118)`, `(0,200,83)` and a dim tail `(0,122,51)`. The animation ticks every 240 ms.
+Two brightness shades are used: a white-ish green head `(208,255,224)` and the body green `(0,200,83)`. The animation ticks every 240 ms.
 
 No permission is requested: the app only uses a JS timer.
 
@@ -67,11 +67,11 @@ The `.rpk` is installed over Bluetooth from an Android phone using the **[Notify
 
 ### Steps
 
-1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk`.
+1. Build the package: `npm run build` → `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk`.
 2. Open **Notify for Xiaomi**.
 3. Go to **Device**.
 4. Select **Third party app**.
-5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk`).
+5. Select the `.rpk` file (`dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk`).
 6. Keep the watch near the phone and follow the guided steps.
 7. When the installation finishes, **RW4 - CMatrix** appears in the watch's app list.
 
@@ -108,7 +108,7 @@ npm run start                        # aiot start --watch (live development)
 python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
 ```
 
-The toolchain is `aiot-toolkit`. Every glyph asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk` — about **245 KB**, of which the 397 PNGs in `src/common/txt/` account for roughly 139 KB. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
+The toolchain is `aiot-toolkit`. Every glyph asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` — about **130 KB**, of which the 199 PNGs in `src/common/txt/` account for roughly 70 KB. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
 
 On-device verification checklist:
 
@@ -130,7 +130,7 @@ rw4-cmatrix/
 │   ├── app.ux                 # app entry (onCreate/onDestroy)
 │   ├── common/
 │   │   ├── logo.png           # launcher icon: matrix rain motif, 96x96 (see On-device findings: icon size moves the app name)
-│   │   └── txt/               # generated glyph atlas: g_<hex>_<shade>.png (99 chars x 4 shades) + blank.png
+│   │   └── txt/               # generated glyph atlas: g_<hex>_<shade>.png (99 chars x 2 shades) + blank.png
 │   └── pages/
 │       └── index/
 │           └── index.ux       # the whole app: fixed 19x17 grid + rain logic + TUNING constants
@@ -154,7 +154,7 @@ rw4-cmatrix/
 | :-- | :-- |
 | `src/manifest.json` | Vela app manifest: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the app uses no other system API) |
 | `src/pages/index/index.ux` | The whole app: fixed grid template (323 `<image>` cells), rain simulation (speeds, trails, respawn, mutation, shade mapping) and styles, plus the `TUNING` constants |
-| `scripts/gen_assets.py` | Generates the 396-shade glyph atlas, `blank.png` and the launcher icon (a 96x96 matrix-rain motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank ink for glyphs) |
+| `scripts/gen_assets.py` | Generates the two-shade glyph atlas (198 files), `blank.png` and the launcher icon (a 96x96 matrix-rain motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank ink for glyphs) |
 | `docs/design.md` | The authoritative UI/UX spec (palette, geometry, animation model, asset spec) |
 
 * * *
@@ -163,7 +163,7 @@ rw4-cmatrix/
 
 Verified on a **real Redmi Watch 4**. Full detail — including the complete system-API table — is in the boilerplate repo: **[rw4-poc → docs/findings.md](https://github.com/hyperpostulate/rw4-poc/blob/main/docs/findings.md)**.
 
-- **Text does not render.** `<text>`/`<span>`/`<input>` paint no readable glyphs and a bundled `@font-face` has no effect, so every visible character is a pre-rendered PNG. This app composes the rain from a per-character glyph atlas: 99 characters × 4 shades = 396 files plus `blank.png`.
+- **Text does not render.** `<text>`/`<span>`/`<input>` paint no readable glyphs and a bundled `@font-face` has no effect, so every visible character is a pre-rendered PNG. This app composes the rain from a per-character glyph atlas: 99 characters × 2 shades = 198 files plus `blank.png`.
 - **Which system APIs work.** `@system.device`, `@system.storage`, `@system.brightness`, `@system.app`, `vibrator.vibrate()` and the JS clock work; geolocation (GPS, error `203`), sensor, battery, network, bluetooth, record, fetch and crypto do not.
 - **No GNSS or health API** is exposed to quick apps, so a GPS/location quick app is impossible on this device. This app needs neither.
 - **`203`** is Vela's *"function not supported"* code (a permission problem would be `400`/`402`); it is not recoverable by the app.
@@ -243,7 +243,7 @@ Tek bir işi iyi yapan, bilinçli olarak çok küçük bir uygulama: cmatrix'in 
 
 ## Ne gösterir
 
-Tek ekran — gerçek siyah, dört yeşil tonu — sabit bir ızgarayla kaplanır: **19 kolon × 17 satır = 323 hücre** (her biri 20×26 px). Her kolon bağımsız bir glif izidir:
+Tek ekran — gerçek siyah, iki yeşil tonu — sabit bir ızgarayla kaplanır: **19 kolon × 17 satır = 323 hücre** (her biri 20×26 px). Her kolon bağımsız bir glif izidir:
 
 | Özellik | Davranış |
 | :-- | :-- |
@@ -253,7 +253,7 @@ Tek ekran — gerçek siyah, dört yeşil tonu — sabit bir ızgarayla kaplanı
 | **Mutasyon** | Her tick'te aktif kolonun görünür bir glifini %20 olasılıkla değiştirir (cmatrix'in karakter değiştirme efekti) |
 | **Glifler** | %70 halfwidth katakana / %30 Latin harfleri, rakamlar ve semboller |
 
-Dört parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)`, ardından `(0,230,118)`, `(0,200,83)` ve soluk kuyruk `(0,122,51)`. Animasyon 240 ms'de bir tick'ler.
+İki parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)` ve gövde yeşili `(0,200,83)`. Animasyon 240 ms'de bir tick'ler.
 
 Hiçbir izin istenmez: uygulama yalnızca bir JS zamanlayıcısı kullanır.
 
@@ -274,11 +274,11 @@ Hiçbir izin istenmez: uygulama yalnızca bir JS zamanlayıcısı kullanır.
 
 ### Adımlar
 
-1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk`.
+1. Paketi derleyin: `npm run build` → `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk`.
 2. **Notify for Xiaomi**'i açın.
 3. **Device** bölümüne gidin.
 4. **Third party app** seçeneğini seçin.
-5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk`) seçin.
+5. `.rpk` dosyasını (`dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk`) seçin.
 6. Saati telefonun yakınında tutun ve yönlendirmeli adımları izleyin.
 7. Kurulum bitince **RW4 - CMatrix** saatin uygulama listesinde görünür.
 
@@ -315,7 +315,7 @@ npm run start                        # aiot start --watch (canlı geliştirme)
 python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
 ```
 
-Araç zinciri `aiot-toolkit`'tir. Her glif varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4cmatrix.debug.1.0.0.rpk` dosyasını üretir — yaklaşık **245 KB**; bunun kabaca 139 KB'ı `src/common/txt/` içindeki 397 PNG'dir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
+Araç zinciri `aiot-toolkit`'tir. Her glif varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` dosyasını üretir — yaklaşık **130 KB**; bunun kabaca 70 KB'ı `src/common/txt/` içindeki 199 PNG'dir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
 
 Cihaz üstü kontrol listesi:
 
@@ -337,7 +337,7 @@ rw4-cmatrix/
 │   ├── app.ux                 # uygulama girişi (onCreate/onDestroy)
 │   ├── common/
 │   │   ├── logo.png           # başlatıcı simgesi: matrix yağmuru motifi, 96x96 (bkz. Cihaz üstü bulgular: simge boyutu ismi kaydırır)
-│   │   └── txt/               # üretilen glif atlası: g_<hex>_<shade>.png (99 karakter x 4 gölge) + blank.png
+│   │   └── txt/               # üretilen glif atlası: g_<hex>_<shade>.png (99 karakter x 2 gölge) + blank.png
 │   └── pages/
 │       └── index/
 │           └── index.ux       # uygulamanın tamamı: sabit 19x17 ızgara + yağmur mantığı + TUNING sabitleri
@@ -361,7 +361,7 @@ rw4-cmatrix/
 | :-- | :-- |
 | `src/manifest.json` | Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (uygulama başka sistem API'si kullanmaz) |
 | `src/pages/index/index.ux` | Uygulamanın tamamı: sabit ızgara şablonu (323 `<image>` hücresi), yağmur benzetimi (hızlar, izler, yeniden başlama, mutasyon, gölge eşlemesi) ve stiller; ayrıca `TUNING` sabitleri |
-| `scripts/gen_assets.py` | 396 gölgeli glif atlasını, `blank.png`'yi ve başlatıcı simgesini (96x96 matrix yağmuru motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (gliflerde ayrıca boş olmadığını) doğrular |
+| `scripts/gen_assets.py` | İki gölgeli glif atlasını (198 dosya), `blank.png`'yi ve başlatıcı simgesini (96x96 matrix yağmuru motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (gliflerde ayrıca boş olmadığını) doğrular |
 | `docs/design.md` | Yetkili UI/UX spesifikasyonu (palet, geometri, animasyon modeli, varlık spec'i) |
 
 * * *
@@ -370,7 +370,7 @@ rw4-cmatrix/
 
 **Gerçek bir Redmi Watch 4** üzerinde doğrulandı. Sistem API tablosunun tamamı dâhil ayrıntılar kaynak projede: **[rw4-poc → docs/findings.md](https://github.com/hyperpostulate/rw4-poc/blob/main/docs/findings.md)**.
 
-- **Metin çizilmiyor.** `<text>`/`<span>`/`<input>` okunabilir glif çizmiyor ve paketlenen `@font-face` etkisiz; bu yüzden her görünür karakter önceden üretilmiş PNG'dir. Bu uygulama yağmuru karakter×gölge glif atlasından dizer: 99 karakter × 4 gölge = 396 dosya artı `blank.png`.
+- **Metin çizilmiyor.** `<text>`/`<span>`/`<input>` okunabilir glif çizmiyor ve paketlenen `@font-face` etkisiz; bu yüzden her görünür karakter önceden üretilmiş PNG'dir. Bu uygulama yağmuru karakter×gölge glif atlasından dizer: 99 karakter × 2 gölge = 198 dosya artı `blank.png`.
 - **Hangi sistem API'leri çalışıyor.** `@system.device`, `@system.storage`, `@system.brightness`, `@system.app`, `vibrator.vibrate()` ve JS saati çalışıyor; geolocation (GPS, hata `203`), sensor, battery, network, bluetooth, record, fetch ve crypto çalışmıyor.
 - **GNSS veya sağlık API'si** hızlı uygulamalara açık değildir; bu cihazda bir GPS/konum hızlı uygulaması imkânsızdır. Bu uygulamanın ikisine de ihtiyacı yok.
 - **`203`**, Vela'nın *"bu işlev desteklenmiyor"* kodu (izin sorunu olsaydı `400`/`402` olurdu); uygulama tarafından giderilemez.
