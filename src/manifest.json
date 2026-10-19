@@ -1,8 +1,8 @@
 {
   "package": "com.hyperpostulate.rw4cmatrix",
   "name": "RW4 - CMatrix",
-  "versionName": "1.0.3",
-  "versionCode": 4,
+  "versionName": "1.0.4",
+  "versionCode": 5,
   "icon": "/common/logo.png",
   "display": {
     "backgroundColor": "#000000"

@@ -18,7 +18,8 @@ Redmi Watch 4'ün Vela çalışma zamanı `<text>`/`<span>`/`<input>` bileşenle
 
 - Görünür her karakter önceden üretilmiş bir PNG'dir; uygulamada statik etiket/başlık görseli yoktur.
 - Yağmur, **karakter × gölge** glif atlasından dizilir: her karakterin iki gölge için ayrı şeffaf PNG'si vardır (`src/common/txt/g_<kod noktası hex>_<gölge>.png`). Boş hücreler `blank.png` kullanır.
-- Şablonda `for="{{ grid }}"` + `for="{{ $item }}"` + `src="{{ $item }}"` ile hücre başına bir `<image>` çizilir; her tick yalnızca `src` dizeleri değiştirilir.
+- Şablon iki modludur: tercih edilen **canvas modunda** tek bir `<canvas>` düğümü, aynı atlasdan `drawImage` ile boyanır; canvas API'sinin herhangi bir parçası yoksa uygulama otomatik olarak **görsel ızgara yedeğine** döner ve `for="{{ grid }}"` + `for="{{ $item }}"` + `src="{{ $item }}"` ile hücre başına bir `<image>` çizilir. Yedek modda her tick yalnızca `src` dizeleri değiştirilir.
+- Canvas modunda `this.grid` `onInit`'ten sonra hiç güncellenmez; şablon veri güdümlü yeniden çizilmez.
 - Atlas dışı bir karakterin dosyası bulunmaz; karakter havuzuna eklenmeden çizilemez.
 
 Tüm görseller `scripts/gen_assets.py` tarafından belirlenimci biçimde üretilir ve her dosya yazıldıktan sonra geri okunup doğrulanır.
@@ -38,13 +39,32 @@ Uygulama tek ekrandır ve ekran sabit bir hücre ızgarasıyla kaplanır. Yağmu
 | **Sol kenar payı** | 0 px (`.app` padding-left) |
 | **Üst kenar payı** | 2 px (`.app` padding-top) |
 
-Yerleşim Vela'nın desteklediği `flex-direction` + `margin`/`padding` ile kurulur (`display` ve `gap` yoktur): `.app` dikey kolon, her `.row` yatay satır, her `.cell` tek bir `<image>`.
+Yerleşim Vela'nın desteklediği `flex-direction` + `margin`/`padding` ile kurulur (`display` ve `gap` yoktur): `.app` dikey kolon; canvas modunda tek `.cv` düğümü, yedek modda `.grid` sarmalayıcısı, her `.row` yatay satır ve her `.cell` tek bir `<image>`.
 
 ```css
-.app  { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; background-color: #000000; padding-left: 0px; padding-top: 2px; }
-.row  { flex-direction: row; }
-.cell { width: 26px; height: 32px; }
+.app   { width: 390px; height: 450px; flex-direction: column; align-items: flex-start; background-color: #000000; padding-left: 0px; padding-top: 2px; }
+.grid  { width: 390px; flex-direction: column; align-items: flex-start; }
+.cv    { width: 390px; height: 448px; }
+.row   { flex-direction: row; }
+.cell  { width: 26px; height: 32px; }
 ```
+
+### Çift İşleyici: Canvas Denemesi + Görsel Izgara Yedeği
+
+Tek `<canvas>` düğümü 210 `<image>` düğümünün yerini alır. Karar akışı:
+
+1. `onShow` içinde, DOM hazır olduktan sonra, **yalnızca bir kez** canvas denemesi yapılır (`this._modeDecided`). Düğüme `this.$element('cv')` ile erişilir (`$refs` API'si yoktur).
+2. Deneme sırasıyla şunları arar: canvas düğümü → `getContext` fonksiyonu → `getContext('2d')` sonucu → `ctx.fillRect` ve `ctx.drawImage` fonksiyonları → global `Image` yapıcısı. Herhangi biri yoksa veya bir istisna oluşursa `this._useFallback()` çağrılır ve `fallback = true` ile görsel ızgara etkinleşir (ilk kare `onInit`'te zaten üretilmiştir).
+3. Başarı durumunda bağlam `this._ctx` içinde, glif önbelleği `this._imgCache` içinde tutulur ve `blank.png` bilgi amaçlı önden yüklenir (mod bu yüklemeye bağlı değildir).
+
+Canvas çizim modeli:
+
+- **Boyut yalnızca CSS'ten gelir.** `<canvas>` öğesinin width/height niteliği yoktur; varsayılan 0×0'dır. `.cv` 390×448 px'dir.
+- **Her kare siyah `fillRect` ile açılır:** `fillStyle = '#000000'; fillRect(0, 0, 390, 448)`. `clearRect` kullanılmaz çünkü canvas'ın varsayılan **beyaz** arka planını ortaya çıkarır (CSS `background-color` canvas'ta yok sayılır).
+- **Glifler:** görünür her hücre için `drawImage(img, c × 26, r × 32, 26, 32)` çağrılır; koordinatlar tam sayıdır (Vela giyilebilir cihazlarda tam sayı aritmetiği kullanır). Görseller global `Image` ile oluşturulur, `img.onload` içinde `_ok = true` işaretlenir ve yalnızca hazır görseller çizilir; `src` dizesi başına bir kez oluşturulup önbelleklenir.
+- **Boş hücreler çizilmez:** siyah taban zaten boş hücreyi kaplar; `blank.png` canvas modunda `drawImage` edilmez.
+- **Teşhis şeridi:** ilk `DIAG_TICKS = 5` tick boyunca ekranın altına 390×8 px yeşil (`#00C853`) şerit çizilir. Şeridin görünmesi canvas hattının cihazda çalıştığını gösterir; ekran kalıcı olarak siyahsa (ne yağmur ne şerit) canvas API'si vardır ama hiçbir şey çizmiyordur — bu durumda yedek mod kalıcı yapılmalıdır.
+- Animasyon `setInterval` üzerinde kalır; `requestAnimationFrame` kullanılmaz.
 
 ---
 
@@ -69,7 +89,7 @@ Kafa ile hücre arasındaki dikey uzaklık `d` olmak üzere:
 | `d == 0` | 0 | Beyazımsı parlak kafa |
 | `d > 0` (iz boyunca) | 1 | Gövde yeşili |
 
-İz dışındaki, henüz ulaşılmamış veya beklemedeki hücreler `blank.png` (tam şeffaf 26×32) ile çizilir.
+İz dışındaki, henüz ulaşılmamış veya beklemedeki hücreler yedek modda `blank.png` (tam şeffaf 26×32) ile çizilir; canvas modunda çizilmez ve siyah taban görünür.
 
 ### Durum Matrisi
 
@@ -80,7 +100,7 @@ Tek durum vardır: **sürekli yağmur**. Alt durumlar yalnızca kolon bazındad�
 | **Aktif** | Tick başlangıcı / bekleme bitişi | Kafa + iz ekranı terk edince |
 | **Beklemede** | `head - trail >= ROWS` | `wait` sayacı 0 olunca yeniden aktif |
 
-Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestroy`'da `clearInterval` ile durur (pil tasarrufu). İlk kare `onInit` içinde hemen kurulur, böylece uygulama boş ekranla açılmaz.
+Timer yaşam döngüsü: `onShow`'da `setInterval` başlar; `onHide` ve `onDestroy`'da `clearInterval` ile durur (pil tasarrufu). İlk kare `onInit` içinde hemen kurulur, böylece uygulama boş ekranla açılmaz (canvas modunda bu kare yedek için hazırdır; canvas'ın ilk karesi ilk tick'te çizilir).
 
 ---
 
@@ -121,9 +141,9 @@ Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak 
 
 ## 5. Performans ve TUNING
 
-210 `<image>` hücresi, cihazın bilinen "yüzlerce görsel ekranı yavaşlatır" sınırının hâlâ içindedir. Bu yüzden:
+Canvas modu tüm ızgarayı tek düğüm ve önbelleklenmiş bitmap'lerle çizer; yedek moddaki 210 `<image>` hücresi ise cihazın bilinen "yüzlerce görsel ekranı yavaşlatır" sınırının hâlâ içindedir. Bu yüzden:
 
-- **DOM sabittir:** Izgara bir kez kurulur; her tick'te yalnızca `src` dizeleri değiştirilir, düğüm oluşturulmaz veya yok edilmez.
+- **DOM sabittir:** Izgara bir kez kurulur; yedek modda her tick'te yalnızca `src` dizeleri değiştirilir, canvas modunda ise hiçbir düğüm güncellenmez.
 - **Vela JS güvenliği:** `Array.prototype.fill` kullanılmaz; diziler döngüyle doldurulur.
 - **Ayarlanabilir sabitler:** `src/pages/index/index.ux` tepesindeki `TUNING` bloğu cihazda ayarlanmak içindir, tahmin için değil:
 
@@ -137,5 +157,7 @@ Halfwidth katakana dar glifler olduğu için eşit görsel ağırlık sağlamak 
 | `WAIT_MAX` | 25 | Maksimum bekleme (tick) |
 | `MUTATE_CHANCE` | 0.2 | Tick başına glif mutasyonu olasılığı |
 | `KANA_WEIGHT` | 0.7 | Katakana payı |
+| `CANVAS_W` / `CANVAS_H` | 390 / 448 | Canvas boyutu (= `COLS × 26`, `ROWS × 32`) |
+| `DIAG_TICKS` / `DIAG_H` | 5 / 8 | Teşhis şeridinin tick sayısı ve yüksekliği (px) |
 
-Cihazda akıcı değilse önce `COLS`/`ROWS` düşürülür veya `TICK_MS` artırılır; ardından yeniden derlenir. Izgara boyutu ile `.app`/`.cell` CSS geometrisi birlikte değiştirilmelidir.
+Cihazda akıcı değilse önce `COLS`/`ROWS` düşürülür veya `TICK_MS` artırılır; ardından yeniden derlenir. Izgara boyutu ile `.app`/`.cv`/`.cell` CSS geometrisi ve `CANVAS_W`/`CANVAS_H` birlikte değiştirilmelidir.
