@@ -36,10 +36,10 @@ const CELL_H = 26         // must match .cell height
 const TICK_MS = 500       // animation interval
 const TRAIL_MIN = 6       // shortest visible tail (cells)
 const TRAIL_MAX = 14      // longest visible tail (cells)
-const SPEED_MIN = 0.6     // cells advanced per tick (slow)
-const SPEED_MAX = 1.6     // cells advanced per tick (fast)
+const SPEED_MIN = 0.4     // cells advanced per tick (slow)
+const SPEED_MAX = 0.6     // cells advanced per tick (fast)
 const WAIT_MAX = 25       // max ticks a column idles before restarting
-const MUTATE_CHANCE = 0.2 // chance a trail cell glyph changes per tick
+const MUTATE_CHANCE = 0.05 // chance a trail cell glyph changes per tick
 const KANA_WEIGHT = 0.7   // share of glyphs drawn from halfwidth katakana
 // ---------------------------------------------------------------------------
 
