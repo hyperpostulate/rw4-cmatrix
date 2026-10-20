@@ -197,15 +197,20 @@ export default {
     this._updateGrid()
   },
 
-  // Incremental frame update: compare the desired src of every cell against
-  // the current data and splice only the differences. A full `this.grid = x`
-  // reassignment re-evaluates all 323 bindings every tick (measured ~7-8 s
-  // per frame on-device); a typical tick changes only ~30-60 cells.
+  // Incremental frame update, one mutation event per changed row: compute the
+  // desired src of every cell, and when a row has any difference replace its
+  // entire content with a single full-range splice on the SAME array (no
+  // fresh reference - a fresh row reference re-sets all of the row's cells).
+  // A full `this.grid = x` reassignment measured ~7-8 s per frame on-device;
+  // per-cell splices measured ~3-4 s regardless of change count, so the cost
+  // unit appears to be the row re-render, not the changed cell.
   _updateGrid() {
     for (let r = 0; r < ROWS; r++) {
       // Read the row through the data getter every tick: if the framework
       // wrapped the rows in observers, this is the observed instance.
       const row = this.grid[r]
+      const vals = []
+      let changed = false
 
       for (let c = 0; c < COLS; c++) {
         const col = this._cols[c]
@@ -227,10 +232,18 @@ export default {
           src = srcOf(cp, shade)
         }
 
-        // Strings compare by value: freshly built equal srcs skip the splice.
+        // Strings compare by value: freshly built equal srcs are not changes.
+        vals.push(src)
         if (row[c] !== src) {
-          row.splice(c, 1, src)
+          changed = true
         }
+      }
+
+      if (changed) {
+        // splice.apply keeps the mutation to ONE observed call even where
+        // spread syntax in calls is not guaranteed on the Vela JS engine.
+        const args = [0, COLS].concat(vals)
+        row.splice.apply(row, args)
       }
     }
   },
