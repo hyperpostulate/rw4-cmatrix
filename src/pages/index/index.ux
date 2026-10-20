@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <div class="row" for="{{ grid }}">
+    <div class="col" for="{{ grid }}">
       <image class="cell" for="{{ $item }}" src="{{ $item }}"></image>
     </div>
   </div>
@@ -16,11 +16,15 @@
 //       /common/txt/g_<codepoint-hex>_<shade>.png  (hex is lowercase, shade 0..1)
 //       /common/txt/blank.png                      (empty cell)
 //   - The grid geometry is fixed and its data arrays are stable: they are
-//     built once in onInit and never reassigned. Each tick patches only the
-//     cells whose src actually changed, via row.splice on the observed data
-//     (in-place `row[c] = x` is not observable in Vue-style frameworks).
-//     If the runtime did not observe nested array mutations the screen would
-//     freeze on the first frame - that is the 1.0.7 on-device experiment.
+//     built once in onInit and never reassigned. Data is COLUMN-major: a
+//     falling column's per-tick changes (new head, shade flip, tail exit)
+//     all land in that column's own array, so one full-range splice per
+//     changed column batches them into a single update event (row-major
+//     scattered them across ~all rows and cost one re-render each).
+//     In-place `arr[i] = x` is not observable in Vue-style frameworks.
+//     On-device measurements: full reassign ~7-8 s/frame, per-cell splice
+//     ~3-4 s, per-array splice ~2 s (row-major) - the cost unit is the
+//     list re-render, not the changed cell.
 //   - Perf warning: the full grid is hundreds of <image> elements. Keeping
 //     COLS*ROWS small is what makes this usable on the watch; growing either
 //     dimension visibly slows rendering.
@@ -197,23 +201,20 @@ export default {
     this._updateGrid()
   },
 
-  // Incremental frame update, one mutation event per changed row: compute the
-  // desired src of every cell, and when a row has any difference replace its
-  // entire content with a single full-range splice on the SAME array (no
-  // fresh reference - a fresh row reference re-sets all of the row's cells).
-  // A full `this.grid = x` reassignment measured ~7-8 s per frame on-device;
-  // per-cell splices measured ~3-4 s regardless of change count, so the cost
-  // unit appears to be the row re-render, not the changed cell.
+  // Incremental frame update, one mutation event per changed column: a
+  // column's whole content is replaced with a single full-range splice on
+  // the SAME array (no fresh reference - a fresh array reference re-sets all
+  // of the list's cells). Columns without changes cost nothing.
   _updateGrid() {
-    for (let r = 0; r < ROWS; r++) {
-      // Read the row through the data getter every tick: if the framework
-      // wrapped the rows in observers, this is the observed instance.
-      const row = this.grid[r]
+    for (let c = 0; c < COLS; c++) {
+      const col = this._cols[c]
+      // Read the column through the data getter every tick: if the framework
+      // wrapped the arrays in observers, this is the observed instance.
+      const colArr = this.grid[c]
       const vals = []
       let changed = false
 
-      for (let c = 0; c < COLS; c++) {
-        const col = this._cols[c]
+      for (let r = 0; r < ROWS; r++) {
         const d = col.head - r
 
         let src
@@ -234,7 +235,7 @@ export default {
 
         // Strings compare by value: freshly built equal srcs are not changes.
         vals.push(src)
-        if (row[c] !== src) {
+        if (colArr[r] !== src) {
           changed = true
         }
       }
@@ -242,24 +243,25 @@ export default {
       if (changed) {
         // splice.apply keeps the mutation to ONE observed call even where
         // spread syntax in calls is not guaranteed on the Vela JS engine.
-        const args = [0, COLS].concat(vals)
-        row.splice.apply(row, args)
+        const args = [0, ROWS].concat(vals)
+        colArr.splice.apply(colArr, args)
       }
     }
   },
 
+  // First frame, column-major: grid[c][r] is the src of cell (row r, col c).
   _buildGrid() {
     const grid = []
 
-    for (let r = 0; r < ROWS; r++) {
-      const row = []
+    for (let c = 0; c < COLS; c++) {
+      const col = this._cols[c]
+      const colArr = []
 
-      for (let c = 0; c < COLS; c++) {
-        const col = this._cols[c]
+      for (let r = 0; r < ROWS; r++) {
         const d = col.head - r
 
         if (col.wait > 0 || d < 0 || d > col.trail) {
-          row.push(BLANK)
+          colArr.push(BLANK)
           continue
         }
 
@@ -272,10 +274,10 @@ export default {
           col.chars[r] = cp
         }
 
-        row.push(srcOf(cp, shade))
+        colArr.push(srcOf(cp, shade))
       }
 
-      grid.push(row)
+      grid.push(colArr)
     }
 
     this.grid = grid
@@ -287,15 +289,15 @@ export default {
 .app {
   width: 390px;
   height: 450px;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
   background-color: #000000;
   padding-left: 5px;
   padding-top: 4px;
 }
 
-.row {
-  flex-direction: row;
+.col {
+  flex-direction: column;
 }
 
 .cell {
