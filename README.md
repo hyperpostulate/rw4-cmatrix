@@ -2,7 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.0.12-green)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4: a faithful **CMatrix** clone — the classic "matrix digital rain" — running on the watch's true-black AMOLED screen. One screen, green glyphs falling in columns, no clock, no date, no permissions.
@@ -36,17 +36,17 @@ To build your own app on top of the boilerplate, see the upstream guide: **[rw4-
 
 ## What it shows
 
-One screen — true black, two shades of green — covered by a fixed grid of **19 columns × 17 rows = 323 cells** (20×26 px each). Each column is an independent trail of glyphs:
+One screen — true black, two shades of green — covered by a fixed grid of **16 columns × 17 rows = 272 cells** (24×26 px each). Each column is an independent trail of glyphs:
 
 | Property | Behaviour |
 | :-- | :-- |
-| **Speed** | 0.6–1.6 cells per tick, with a fractional accumulator per column |
+| **Speed** | 0.2–0.4 cells per tick, with a fractional accumulator per column |
 | **Trail** | 6–14 cells long, brightest at the head and fading down the tail |
 | **Respawn** | A column that leaves the screen idles 0–25 ticks, then starts again |
-| **Mutation** | On each tick an active column has a 20% chance to re-roll one visible glyph (cmatrix's flickering-character effect) |
+| **Mutation** | On each tick an active column has a 5% chance to re-roll one visible glyph (cmatrix's flickering-character effect) |
 | **Glyphs** | 70% halfwidth katakana / 30% Latin letters, digits and symbols |
 
-Two brightness shades are used: a white-ish green head `(208,255,224)` and the body green `(0,200,83)`. The animation ticks every 240 ms.
+Two brightness shades are used: a white-ish green head `(208,255,224)` and the body green `(0,200,83)`. The animation ticks every 500 ms; on-device the screen steps about every 0.8 s (the measured hardware floor for this grid — see [Limitations](#limitations)).
 
 No permission is requested: the app only uses a JS timer.
 
@@ -108,15 +108,15 @@ npm run start                        # aiot start --watch (live development)
 python3 scripts/gen_assets.py        # Regenerate the PNG assets from code
 ```
 
-The toolchain is `aiot-toolkit`. Every glyph asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` — about **130 KB**, of which the 199 PNGs in `src/common/txt/` account for roughly 70 KB. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
+The toolchain is `aiot-toolkit`. Every glyph asset is generated at exactly the size it is displayed at, which keeps the bundle small (the toolkit's `--enable-image-png8` flag actually makes the bundle *larger* at this asset size, so it is not used). The build produces `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` — about **135 KB**, of which the 199 PNGs in `src/common/txt/` account for roughly 75 KB. The debug `.rpk` needs no signing; a release package needs `sign/private.pem` and `sign/certificate.pem` (generate with OpenSSL).
 
 On-device verification checklist:
 
 1. Is the rain drawn as glyph trails (not empty or solid blocks)?
 2. Do columns fall at different speeds, pause, and restart?
-3. Are the four shade levels visible (bright head fading into the tail)?
+3. Are both shades visible (bright head and green body)?
 4. Does an occasional glyph mutation show up?
-5. Is the app smooth? If not, tune the `TUNING` constants at the top of `index.ux` (lower `COLS`/`ROWS` or raise `TICK_MS`) and rebuild.
+5. Does the screen step roughly every 0.8 s? That is the measured hardware floor for this 272-image grid — the renderer is already incremental (one update event per changed column); going faster would require a smaller grid, which visibly thins the rain.
 6. In the launcher, are the icon and the app name in their normal positions?
 
 * * *
@@ -133,7 +133,7 @@ rw4-cmatrix/
 │   │   └── txt/               # generated glyph atlas: g_<hex>_<shade>.png (99 chars x 2 shades) + blank.png
 │   └── pages/
 │       └── index/
-│           └── index.ux       # the whole app: fixed 19x17 grid + rain logic + TUNING constants
+│           └── index.ux       # the whole app: column-major 16x17 grid + incremental splice renderer + rain logic + TUNING constants
 ├── scripts/
 │   ├── gen_assets.py          # reproducible Pillow generator for every PNG asset
 │   └── assets/
@@ -153,7 +153,7 @@ rw4-cmatrix/
 | File | Purpose |
 | :-- | :-- |
 | `src/manifest.json` | Vela app manifest: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (the app uses no other system API) |
-| `src/pages/index/index.ux` | The whole app: fixed grid template (323 `<image>` cells), rain simulation (speeds, trails, respawn, mutation, shade mapping) and styles, plus the `TUNING` constants |
+| `src/pages/index/index.ux` | The whole app: column-major grid template (272 `<image>` cells), incremental renderer (one full-range splice per changed column), rain simulation (speeds, trails, respawn, mutation, shade mapping) and styles, plus the `TUNING` constants |
 | `scripts/gen_assets.py` | Generates the two-shade glyph atlas (198 files), `blank.png` and the launcher icon (a 96x96 matrix-rain motif) deterministically; re-reads every file it writes and asserts dimensions (and non-blank ink for glyphs) |
 | `docs/design.md` | The authoritative UI/UX spec (palette, geometry, animation model, asset spec) |
 
@@ -168,14 +168,17 @@ Verified on a **real Redmi Watch 4**. Full detail — including the complete sys
 - **No GNSS or health API** is exposed to quick apps, so a GPS/location quick app is impossible on this device. This app needs neither.
 - **`203`** is Vela's *"function not supported"* code (a permission problem would be `400`/`402`); it is not recoverable by the app.
 - **Launcher icon size moves the app name.** The launcher reserves a slot whose width follows the icon PNG's pixel size, so the icon also sets where the label starts — and no manifest field controls label position. The **96x96** `logo.png` is deliberate: `192x192` pushed the app name to the middle of the row, while `96x96` kept it in its normal position.
+- **`<canvas>` crashes the device.** The canvas JS API surface exists (`$element` → `getContext('2d')` → `fillRect`/`drawImage`, plus a global `Image`), but it paints nothing and using it crashed the quick app runtime hard enough to **reboot the watch**. Do not build a canvas renderer for this device — full finding in the upstream `docs/findings.md`.
+- **Image-grid update cost model.** The framework re-renders a `for` list per observed array mutation (~0.1 s per touched list on this device); the changed-cell count is secondary, and assigning a fresh array reference re-sets the whole list. This app's renderer is tuned around that model (stable column-major arrays, one full-range `splice` per changed column).
 
 * * *
 
 ## Limitations
 
 - **Text must be images.** Adding new characters means extending the character pools in `scripts/gen_assets.py` (`LATIN` / the katakana range) and regenerating the atlas. Characters outside the atlas would not have a matching `g_<hex>_<shade>.png`.
-- **Many glyph images slow the app down.** 323 `<image>` elements sit deliberately at the upper edge of the known "hundreds of images are slow" warning. If it feels sluggish on-device, lower `COLS`/`ROWS` or raise `TICK_MS` in the `TUNING` block at the top of `index.ux`, then rebuild.
-- **The grid is fixed at runtime.** Each tick only swaps the `src` strings of a constant set of image nodes; no nodes are created or destroyed. Resizing the grid means editing both the `TUNING` constants and the CSS geometry.
+- **The rendering cost floor is reached.** 272 `<image>` cells updated with incremental, column-major splices step the screen about every **0.8 s** on-device, after five measured renderer iterations (full data reassignment ~7–8 s → per-cell splices ~3–4 s → per-row splice ~2 s → column-major ~1 s → current ~0.8 s). Going faster would require a smaller grid, which visibly thins the rain — deliberately not taken.
+- **The grid is fixed at runtime.** The data arrays are column-major and stable: each tick patches only the columns that changed, with one full-range `splice` per column; no nodes are created or destroyed. Resizing the grid means editing the `TUNING` constants, the CSS geometry and regenerating the atlas.
+- **Canvas is not an alternative.** A single-surface canvas renderer was probed on-device: the JS API exists but paints nothing and crashed the runtime so hard the watch rebooted (see [On-device findings](#on-device-findings)). Do not retry.
 - **`npm audit` reports vulnerabilities in transitive dev dependencies** of `aiot-toolkit`. They are build-time only and do not ship inside the `.rpk`.
 
 * * *
@@ -209,7 +212,7 @@ This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**
 
 ![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
 ![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.0.12-green)
 ![License](https://img.shields.io/badge/license-GPLv3-blue)
 
 Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`): klasik **CMatrix** ("matrix dijital yağmuru") klonu — saatin gerçek siyah AMOLED ekranında yeşil glifler kolonlar hâlinde düşer. Tek ekran, saat/tarih yok, izin yok.
@@ -243,17 +246,17 @@ Tek bir işi iyi yapan, bilinçli olarak çok küçük bir uygulama: cmatrix'in 
 
 ## Ne gösterir
 
-Tek ekran — gerçek siyah, iki yeşil tonu — sabit bir ızgarayla kaplanır: **19 kolon × 17 satır = 323 hücre** (her biri 20×26 px). Her kolon bağımsız bir glif izidir:
+Tek ekran — gerçek siyah, iki yeşil tonu — sabit bir ızgarayla kaplanır: **16 kolon × 17 satır = 272 hücre** (her biri 24×26 px). Her kolon bağımsız bir glif izidir:
 
 | Özellik | Davranış |
 | :-- | :-- |
-| **Hız** | Tick başına 0.6–1.6 hücre; her kolonda kesirli biriktirici |
+| **Hız** | Tick başına 0.2–0.4 hücre; her kolonda kesirli biriktirici |
 | **İz (trail)** | 6–14 hücre; başta parlak, kuyruğa doğru solar |
 | **Yeniden başlama** | Ekrandan çıkan kolon 0–25 tick bekler, sonra yeniden başlar |
-| **Mutasyon** | Her tick'te aktif kolonun görünür bir glifini %20 olasılıkla değiştirir (cmatrix'in karakter değiştirme efekti) |
+| **Mutasyon** | Her tick'te aktif kolonun görünür bir glifini %5 olasılıkla değiştirir (cmatrix'in karakter değiştirme efekti) |
 | **Glifler** | %70 halfwidth katakana / %30 Latin harfleri, rakamlar ve semboller |
 
-İki parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)` ve gövde yeşili `(0,200,83)`. Animasyon 240 ms'de bir tick'ler.
+İki parlaklık tonu kullanılır: beyazımsı yeşil kafa `(208,255,224)` ve gövde yeşili `(0,200,83)`. Animasyon 500 ms'de bir tick'ler; cihazda ekran yaklaşık 0,8 saniyede bir ilerler (bu ızgara için ölçülen donanım tabanı — bkz. [Sınırlamalar](#sınırlamalar)).
 
 Hiçbir izin istenmez: uygulama yalnızca bir JS zamanlayıcısı kullanır.
 
@@ -315,15 +318,15 @@ npm run start                        # aiot start --watch (canlı geliştirme)
 python3 scripts/gen_assets.py        # PNG varlıklarını koddan yeniden üret
 ```
 
-Araç zinciri `aiot-toolkit`'tir. Her glif varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` dosyasını üretir — yaklaşık **130 KB**; bunun kabaca 70 KB'ı `src/common/txt/` içindeki 199 PNG'dir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
+Araç zinciri `aiot-toolkit`'tir. Her glif varlığı ekranda gösterildiği boyutta üretilir; bu paketi küçük tutar (araç zincirinin `--enable-image-png8` bayrağı bu varlık boyutunda paketi daha da *büyütür*, bu yüzden kullanılmaz). Derleme `dist/com.hyperpostulate.rw4cmatrix.debug.<version>.rpk` dosyasını üretir — yaklaşık **135 KB**; bunun kabaca 75 KB'ı `src/common/txt/` içindeki 199 PNG'dir. Debug `.rpk` imza gerektirmez; release paketi için `sign/private.pem` ve `sign/certificate.pem` gerekir (OpenSSL ile üretilir).
 
 Cihaz üstü kontrol listesi:
 
 1. Yağmur glif izleriyle çiziliyor mu (boş veya düz bloklar değil)?
 2. Kolonlar farklı hızlarda düşüp duraklamadan sonra yeniden başlıyor mu?
-3. Dört gölge kademesi görünüyor mu (parlak kafa → solan kuyruk)?
+3. İki gölge görünüyor mu (parlak kafa ve yeşil gövde)?
 4. Ara sıra bir glif mutasyonu görünüyor mu?
-5. Uygulama akıcı mı? Değilse `index.ux` tepesindeki `TUNING` sabitleriyle ayarlayın (`COLS`/`ROWS` düşürün veya `TICK_MS` artırın) ve yeniden derleyin.
+5. Ekran yaklaşık 0,8 saniyede bir mi ilerliyor? Bu, 272 görseli olan bu ızgara için ölçülen donanım tabanıdır — render zaten artımlıdır (değişen her kolon için tek güncelleme olayı); daha hızlı gitmek ızgarayı küçültmeyi gerektirir ki bu, yağmuru gözle görülür biçimde seyreltir.
 6. Başlatıcıda simge ve uygulama ismi normal konumunda mı?
 
 * * *
@@ -340,7 +343,7 @@ rw4-cmatrix/
 │   │   └── txt/               # üretilen glif atlası: g_<hex>_<shade>.png (99 karakter x 2 gölge) + blank.png
 │   └── pages/
 │       └── index/
-│           └── index.ux       # uygulamanın tamamı: sabit 19x17 ızgara + yağmur mantığı + TUNING sabitleri
+│           └── index.ux       # uygulamanın tamamı: kolon-major 16x17 ızgara + artımlı splice render + yağmur mantığı + TUNING sabitleri
 ├── scripts/
 │   ├── gen_assets.py          # her PNG varlığı için tekrarlanabilir Pillow üreteci
 │   └── assets/
@@ -360,7 +363,7 @@ rw4-cmatrix/
 | Dosya | Amaç |
 | :-- | :-- |
 | `src/manifest.json` | Vela uygulama manifesti: `package` = `com.hyperpostulate.rw4cmatrix`, `name` = `RW4 - CMatrix`, `deviceTypeList: ["watch"]`, `designWidth: 390`, `features: ["system.router"]` (uygulama başka sistem API'si kullanmaz) |
-| `src/pages/index/index.ux` | Uygulamanın tamamı: sabit ızgara şablonu (323 `<image>` hücresi), yağmur benzetimi (hızlar, izler, yeniden başlama, mutasyon, gölge eşlemesi) ve stiller; ayrıca `TUNING` sabitleri |
+| `src/pages/index/index.ux` | Uygulamanın tamamı: kolon-major ızgara şablonu (272 `<image>` hücresi), artımlı render (değişen her kolon için tek tam-aralık splice), yağmur benzetimi (hızlar, izler, yeniden başlama, mutasyon, gölge eşlemesi) ve stiller; ayrıca `TUNING` sabitleri |
 | `scripts/gen_assets.py` | İki gölgeli glif atlasını (198 dosya), `blank.png`'yi ve başlatıcı simgesini (96x96 matrix yağmuru motifi) belirlenimci biçimde üretir; yazdığı her dosyayı geri okuyup boyutunu (gliflerde ayrıca boş olmadığını) doğrular |
 | `docs/design.md` | Yetkili UI/UX spesifikasyonu (palet, geometri, animasyon modeli, varlık spec'i) |
 
@@ -375,14 +378,17 @@ rw4-cmatrix/
 - **GNSS veya sağlık API'si** hızlı uygulamalara açık değildir; bu cihazda bir GPS/konum hızlı uygulaması imkânsızdır. Bu uygulamanın ikisine de ihtiyacı yok.
 - **`203`**, Vela'nın *"bu işlev desteklenmiyor"* kodu (izin sorunu olsaydı `400`/`402` olurdu); uygulama tarafından giderilemez.
 - **Başlatıcı simge boyutu uygulama ismini kaydırır.** Başlatıcı, genişliği simge PNG'sinin piksel boyutunu izleyen bir alan ayırır; böylece simge ismin nereden başlayacağını da belirler ve ismi konumlandıran bir manifest alanı yoktur. **96x96** `logo.png` bilinçlidir: `192x192` ismi satırın ortasına iterken `96x96` normal konumunda tuttu.
+- **`<canvas>` cihazı çökertiyor.** Canvas JS API yüzeyi mevcut (`$element` → `getContext('2d')` → `fillRect`/`drawImage`, ayrıca global `Image`), ama hiçbir şey çizmez ve kullanılması hızlı uygulama çalışma zamanını saatin **yeniden başlatacağı** kadar sert çökertir. Bu cihaz için canvas render yazmayın — tam bulgu kaynak projedeki `docs/findings.md`'de.
+- **Görsel-ızgara güncelleme maliyet modeli.** Çerçeve, gözlenen her dizi mutasyonu için bir `for` listesini yeniden render eder (bu cihazda dokunulan liste başına ~0,1 sn); değişen hücre sayısı ikincildir ve taze dizi referansı atamak tüm listeyi yeniden ayarlar. Bu uygulamanın render'ı bu modele göre ayarlıdır (kararlı kolon-major diziler, değişen her kolon için tek tam-aralık `splice`).
 
 * * *
 
 ## Sınırlamalar
 
 - **Metin görsel olmak zorundadır.** Yeni karakter eklemek, `scripts/gen_assets.py` içindeki karakter havuzlarını (`LATIN` / katakana aralığı) genişletmeyi ve atlası yeniden üretmeyi gerektirir. Atlas dışındaki karakterler için eşleşen `g_<hex>_<shade>.png` bulunmaz.
-- **Çok sayıda glif görseli uygulamayı yavaşlatır.** 323 `<image>`, bilinen "yüzlerce görsel yavaşlatır" uyarısının bilinçli üst sınırında durur. Cihazda ağır hissedilirse `index.ux` tepesindeki `TUNING` bloğunda `COLS`/`ROWS` düşürün veya `TICK_MS` artırın, sonra yeniden derleyin.
-- **Izgara çalışma zamanında sabittir.** Her tick yalnızca sabit sayıda görsel düğümün `src` dizelerini değiştirir; düğüm oluşturulmaz veya yok edilmez. Izgarayı yeniden boyutlandırmak hem `TUNING` sabitlerini hem de CSS geometrisini düzenlemeyi gerektirir.
+- **Render maliyet tabanına ulaşıldı.** Artımlı, kolon-major splice'larla güncellenen 272 `<image>` hücresi ekranı cihazda yaklaşık **0,8 saniyede** bir ilerletir — beş ölçümlü render yinelemesinden sonra (tam veri yeniden ataması ~7–8 sn → hücre başına splice ~3–4 sn → satır başına splice ~2 sn → kolon-major ~1 sn → güncel ~0,8 sn). Daha hızlı gitmek ızgarayı küçültmeyi gerektirir ki bu, yağmuru gözle görülür biçimde seyreltir — bilinçli olarak yapılmadı.
+- **Izgara çalışma zamanında sabittir.** Veri dizileri kolon-major ve kararlıdır: her tick yalnızca değişen kolonları, kolon başına tek tam-aralık `splice` ile yamalar; düğüm oluşturulmaz veya yok edilmez. Izgarayı yeniden boyutlandırmak `TUNING` sabitlerini, CSS geometrisini düzenlemeyi ve atlası yeniden üretmeyi gerektirir.
+- **Canvas bir alternatif değildir.** Tek yüzeyli canvas render cihazda test edildi: JS API mevcut ama hiçbir şey çizmiyor ve çalışma zamanını saatin yeniden başlayacağı kadar sert çökertti (bkz. [Cihaz üstü bulgular](#cihaz-üstü-bulgular)). Yeniden denemeyin.
 - **`npm audit`**, `aiot-toolkit`'in geçişli geliştirme bağımlılıklarında güvenlik açıkları bildirir. Bunlar yalnızca derleme zamanıyla ilgilidir ve `.rpk` paketine dâhil olmaz.
 
 * * *
