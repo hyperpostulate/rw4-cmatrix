@@ -33,9 +33,9 @@
 //     display/gap), hence the row/column flex wrappers.
 
 // ---- TUNING ---------------------------------------------------------------
-const COLS = 18           // 18 * 20px = 360px wide; the right edge rests black
+const COLS = 16           // 16 * 24px = 384px wide (+5px padding = 389px, screen filled)
 const ROWS = 17           // 17 * 26px = 442px tall
-const CELL_W = 20         // must match .cell width
+const CELL_W = 24         // must match .cell width
 const CELL_H = 26         // must match .cell height
 const TICK_MS = 500       // animation interval
 const TRAIL_MIN = 6       // shortest visible tail (cells)
@@ -301,7 +301,7 @@ export default {
 }
 
 .cell {
-  width: 20px;
+  width: 24px;
   height: 26px;
 }
 </style>

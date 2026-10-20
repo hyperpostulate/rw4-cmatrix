@@ -8,7 +8,7 @@ perfectly. Every visible character is therefore a pre-rendered PNG.
 
 The app is a Matrix-style "digital rain" screen. Runtime code composes strings
 from a per-character glyph atlas. Each glyph is generated once per brightness
-shade, at exactly its on-screen display size (20x26 px cell):
+shade, at exactly its on-screen display size (24x26 px cell):
 
     src/common/txt/g_<codepoint hex>_<shade>.png
 
@@ -27,7 +27,7 @@ Character sets (fonts under scripts/assets/, never shipped):
 
 43 latin + 56 kana = 99 characters = 198 glyph files (two shades), plus
 blank.png = 199 PNGs in src/common/txt/. Every glyph, including the kana
-cell, must fit the 18x24 ink box inside its 20x26 cell.
+cell, must fit the 22x24 ink box inside its 24x26 cell.
 
 Glyph placement is bbox based, never baseline-guessed: the rendered ink is
 measured with font.getbbox(), centred horizontally and vertically in the cell,
@@ -62,13 +62,13 @@ os.makedirs(TXT_DIR, exist_ok=True)
 SS = 4  # supersampling factor while drawing; stored assets are 1x
 
 # ---- geometry (assets are generated at their on-screen display size) ----
-CELL_W, CELL_H = 20, 26
-CELL_INK_W, CELL_INK_H = CELL_W - 2, CELL_H - 2  # 18x24 usable ink box
+CELL_W, CELL_H = 24, 26
+CELL_INK_W, CELL_INK_H = CELL_W - 2, CELL_H - 2  # 22x24 usable ink box
 
-LATIN_FONT_SIZE = 19         # requested size; drops to 18 because 'W' at 19
-LATIN_FONT_MIN = 15          # inks 19px wide and overflows the 18px box
-KANA_FONT_SIZE = 26          # halfwidth kana are narrow -> larger size for
-KANA_FONT_MIN = 22           # equal visual mass; shrinks if the ink overflows
+LATIN_FONT_SIZE = 23         # requested size; drops if 'W' overflows the 22px
+LATIN_FONT_MIN = 18          # ink box (scales with the cell width)
+KANA_FONT_SIZE = 26          # halfwidth kana are narrow and height-capped by
+KANA_FONT_MIN = 22           # the 24px ink box; growing them needs taller cells
 
 # ---- palette / shades (0 = head, 1 = body) ----
 SHADES = [
