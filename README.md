@@ -1,16 +1,24 @@
-# rw4-cmatrix — Redmi Watch 4 CMatrix
+<p align="center">
+  <img src="src/common/logo.png" alt="RW4 - CMatrix" width="96" height="96">
+</p>
 
-![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
-![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.12-green)
-![License](https://img.shields.io/badge/license-GPLv3-blue)
+<h1 align="center">RW4 - CMatrix</h1>
 
-A minimal Xiaomi Vela JS quick app (`.rpk`) for the Redmi Watch 4: a faithful **CMatrix** clone — the classic "matrix digital rain" — running on the watch's true-black AMOLED screen. One screen, green glyphs falling in columns, no clock, no date, no permissions.
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Xiaomi%20Vela-blue" alt="Platform: Xiaomi Vela">
+  <img src="https://img.shields.io/badge/device-Redmi%20Watch%204-orange" alt="Device: Redmi Watch 4">
+  <img src="https://img.shields.io/badge/version-1.0.12-green" alt="Version: 1.0.12">
+  <img src="https://img.shields.io/badge/license-GPLv3-blue" alt="License: GPLv3">
+</p>
 
-Built on the **[rw4-poc](https://github.com/hyperpostulate/rw4-poc)** boilerplate — the platform PoC that mapped what a third-party Vela quick app can and cannot do on this device.
+<p align="center">A faithful <b>CMatrix</b> clone — the classic "matrix digital rain" — on the Redmi Watch 4's true-black AMOLED screen.</p>
+<p align="center">One screen, green glyphs falling in columns, no clock, no date, no permissions.</p>
 
-Inspired by **cmatrix** by Chris Allegretta (current upstream: [github.com/abishekvashok/cmatrix](https://github.com/abishekvashok/cmatrix)).
-Türkçe sürüm: [README-TR.md](README-TR.md)
+<p align="center">A minimal Xiaomi Vela JS quick app (<code>.rpk</code>) built on the <a href="https://github.com/hyperpostulate/rw4-poc"><b>rw4-poc</b></a> boilerplate — the platform PoC that mapped what a third-party Vela quick app can and cannot do on this device.</p>
+
+<p align="center">Inspired by <b>cmatrix</b> by Chris Allegretta (current upstream: <a href="https://github.com/abishekvashok/cmatrix">github.com/abishekvashok/cmatrix</a>).</p>
+
+<p align="center">Türkçe sürüm: <a href="README-TR.md">README-TR.md</a></p>
 
 * * *
 

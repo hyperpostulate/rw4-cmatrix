@@ -1,16 +1,24 @@
-# rw4-cmatrix — Redmi Watch 4 CMatrix
+<p align="center">
+  <img src="src/common/logo.png" alt="RW4 - CMatrix" width="96" height="96">
+</p>
 
-![Platform](https://img.shields.io/badge/platform-Xiaomi%20Vela-blue)
-![Device](https://img.shields.io/badge/device-Redmi%20Watch%204-orange)
-![Version](https://img.shields.io/badge/version-1.0.12-green)
-![License](https://img.shields.io/badge/license-GPLv3-blue)
+<h1 align="center">RW4 - CMatrix</h1>
 
-Redmi Watch 4 için minimal bir Xiaomi Vela JS hızlı uygulaması (`.rpk`): klasik **CMatrix** ("matrix dijital yağmuru") klonu — saatin gerçek siyah AMOLED ekranında yeşil glifler kolonlar hâlinde düşer. Tek ekran, saat/tarih yok, izin yok.
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Xiaomi%20Vela-blue" alt="Platform: Xiaomi Vela">
+  <img src="https://img.shields.io/badge/device-Redmi%20Watch%204-orange" alt="Device: Redmi Watch 4">
+  <img src="https://img.shields.io/badge/version-1.0.12-green" alt="Version: 1.0.12">
+  <img src="https://img.shields.io/badge/license-GPLv3-blue" alt="License: GPLv3">
+</p>
 
-Bu uygulama, bu cihazda bir üçüncü taraf Vela hızlı uygulamasının neler yapayıp yapamayacağını haritalayan platform PoC'si olan **[rw4-poc](https://github.com/hyperpostulate/rw4-poc)** şablonu üzerine inşa edilmiştir.
+<p align="center">Klasik <b>CMatrix</b> ("matrix dijital yağmuru") klonu — Redmi Watch 4'ün gerçek siyah AMOLED ekranında.</p>
+<p align="center">Tek ekran, kolonlar hâlinde düşen yeşil glifler, saat yok, tarih yok, izin yok.</p>
 
-İlham: Chris Allegretta'nın **cmatrix**'i (güncel kaynak: [github.com/abishekvashok/cmatrix](https://github.com/abishekvashok/cmatrix)).
-English version: [README.md](README.md)
+<p align="center">Bu cihazda bir üçüncü taraf Vela hızlı uygulamasının neler yapıp yapamayacağını haritalayan platform PoC'si olan <a href="https://github.com/hyperpostulate/rw4-poc"><b>rw4-poc</b></a> şablonu üzerine inşa edilmiş minimal bir Xiaomi Vela JS hızlı uygulaması (<code>.rpk</code>).</p>
+
+<p align="center">İlham: Chris Allegretta'nın <b>cmatrix</b>'i (güncel kaynak: <a href="https://github.com/abishekvashok/cmatrix">github.com/abishekvashok/cmatrix</a>).</p>
+
+<p align="center">English version: <a href="README.md">README.md</a></p>
 
 * * *
 
